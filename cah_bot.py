@@ -54,7 +54,7 @@ async def players(ctx):
 @commands.guild_only()
 async def create(ctx):
     '''
-    Starts a game of CaH in this channel.
+    Creates a of CaH in this channel.
     '''
     if ctx.channel in games:
         await ctx.send('There is already a game of CaH in this channel.')
@@ -71,6 +71,9 @@ async def create(ctx):
 @bot.command()
 @commands.guild_only()
 async def start(ctx):
+    '''
+    Starts the game of CaH in this channel. (Host-only)
+    '''
     if ctx.channel not in games:
         return await ctx.send("There are no CaH games in this channel")
     game = games[ctx.channel]
@@ -89,6 +92,9 @@ async def start(ctx):
 @bot.command()
 @commands.guild_only()
 async def deal(ctx):
+    '''
+    Deal the cards, called automatically (todo: hide)
+    '''
     if ctx.channel not in games:
         return await ctx.send("There are no CaH games in this channel")
     game = games[ctx.channel]
@@ -158,6 +164,9 @@ async def join(ctx):
 @bot.command()
 @commands.dm_only()
 async def select(ctx, num: int):
+    '''
+    Pick a card among the ones you have as the answer to the question
+    '''
     if ctx.author.id not in player2channel:
         return await ctx.send("You're not part of a game!")
 
@@ -192,6 +201,9 @@ async def select(ctx, num: int):
 @bot.command()
 @commands.guild_only()
 async def cards(ctx):
+    '''
+    Shows the currently selcted cards
+    '''
     if ctx.channel not in games:
         return await ctx.send(f"There is no ongoing game in this channel\nUse {bot.command_prefix}create to create one")
     game = games[ctx.channel]
@@ -210,6 +222,9 @@ async def cards(ctx):
 @bot.command()
 @commands.guild_only()
 async def choose(ctx, fake_id: int):
+    '''
+    (Tzar only) pick a card as that rounds winner
+    '''
     cur_channel = player2channel[ctx.author.id]
     game = games[cur_channel]
     print(game.has_played)
@@ -286,6 +301,9 @@ async def quit(ctx):
 
 @bot.command()
 async def score(ctx):
+    '''
+    Shows the scoreboard for the game in this channel
+    '''
     if ctx.channel not in games:
         return await ctx.send("No game in this channel.")
     game = games[ctx.channel]
