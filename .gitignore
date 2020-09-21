@@ -6,3 +6,6 @@ __pycache__/
 
 # Data download folder
 cah/data/bin/*
+
+# Venv files
+/venv/

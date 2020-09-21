@@ -48,8 +48,6 @@ def load_cards(loc):
         return []
 
 
-
-
 class CardGroup:
     def __init__(self, card_arr):
         self.cards = {}
