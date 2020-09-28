@@ -3,6 +3,8 @@ import warnings
 warnings.simplefilter("once")
 import random
 import os
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 
 
 ANSWERS_LOCATION = 'data/bin/answer.txt'
@@ -79,3 +81,83 @@ class CardGroup:
             return True
         else:
             raise KeyError("Given card ID not found.")
+
+
+def break_fix(text, width, draw, font):
+    if not text:
+        return
+    lo = 0
+    hi = len(text)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        t = text[:mid]
+        w, h = draw.textsize(t,font=font)
+        if w <= width:
+            lo = mid
+        else:
+            hi = mid - 1
+    t = text[:lo]
+    w, h = draw.textsize(t, font=font)
+    yield t, w, h
+    yield from break_fix(text[lo:], width, draw, font)
+
+
+def fit_text(img, text, color, font):
+    width = img.size[0] - 2
+    draw = ImageDraw.Draw(img)
+    pieces = list(break_fix(text, width-23, draw, font))
+    height = sum(p[2] for p in pieces)
+    if height > img.size[1]:
+        raise ValueError("text doesn't fit")
+    y = (img.size[1] - height) // 2
+    for t, w, h in pieces:
+        x = (img.size[0] - w) // 2
+        draw.text((x, y), t, font=font, fill=color)
+        y += h
+
+
+def Card_To_Image(card_data: str, card_num: int):
+    c_name = ''.join([i[0] for i in card_data.split()])
+
+    logo = Image.open("cah/img/logo.png")  #logo
+    logo.thumbnail((25, 25))
+    card = Image.new("RGB", (180, 180), 'white') #card maker
+    edit = ImageDraw.Draw(card)
+    card_borders = [(170, 170, 10, 170), (170, 170, 170, 10), (10, 10, 170, 10), (10, 170, 10, 10)]
+    for border in card_borders:
+        edit.line(border, fill='black', width=3)
+    font = ImageFont.truetype('cah/font/Montserrat.ttf', size=13)
+
+    fit_text(card, card_data, (0, 0, 0), font=font)
+
+    edit.text((85, 25), f'({card_num})', fill='black', font=font)
+    
+    card.paste(logo, (130, 130))
+    #card.save('test.png')
+    return card
+
+
+def combine_cards(images: tuple):
+    x_offset = 0
+
+    widths, heights = zip(*(i.size for i in images))
+    total_width = sum(widths)
+    max_height = max(heights)
+    new_im = Image.new('RGB', (total_width, max_height))
+    for im in images:
+        new_im.paste(im, (x_offset, 0))
+        x_offset += im.size[0]
+
+    return new_im
+
+
+def deck_maker(deck: tuple):
+    images = []
+    for i, j in deck:
+        images.append(Card_To_Image(card_data=j, card_num=i))
+
+    cards = [combine_cards(tuple(images[:4])), combine_cards(tuple(images[4:]))]
+    deck = Image.new('RGB', (720, 360))
+    deck.paste(cards[0], (0, 0))
+    deck.paste(cards[1], (0, 180))
+    return deck
